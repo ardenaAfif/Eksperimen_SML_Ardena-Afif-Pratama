@@ -1,5 +1,5 @@
 Customer ID,Age,Gender,Item Purchased,Category,Purchase Amount (USD),Location,Size,Color,Season,Review Rating,Subscription Status,Payment Method,Shipping Type,Discount Applied,Promo Code Used,Previous Purchases,Preferred Payment Method,Frequency of Purchases
-1,50,Male,Blouse,Clothing,53,Kentucky,L,Gray,Winter,3.1,Yes,Credit Card,Express,Yes,Yes,14,Venmo,Fortnightly
+1,44,Male,Blouse,Clothing,53,Kentucky,L,Gray,Winter,3.1,Yes,Credit Card,Express,Yes,Yes,14,Venmo,Fortnightly
 2,19,Male,Sweater,Clothing,64,Maine,L,Maroon,Winter,3.1,Yes,Bank Transfer,Express,Yes,Yes,2,Cash,Fortnightly
 3,50,Male,Jeans,Clothing,73,Massachusetts,S,Maroon,Spring,3.1,Yes,Cash,Free Shipping,Yes,Yes,23,Credit Card,Weekly
 4,21,Male,Sandals,Footwear,90,Rhode Island,M,Maroon,Spring,3.5,Yes,PayPal,Next Day Air,Yes,Yes,49,PayPal,Weekly
@@ -19,7 +19,7 @@ Customer ID,Age,Gender,Item Purchased,Category,Purchase Amount (USD),Location,Si
 18,53,Male,Dress,Clothing,38,Mississippi,XL,Lavender,Winter,4.7,Yes,Debit Card,2-Day Shipping,Yes,Yes,36,Venmo,Quarterly
 19,52,Male,Sweater,Clothing,48,Montana,S,Black,Summer,4.6,Yes,Bank Transfer,Free Shipping,Yes,Yes,17,Cash,Weekly
 20,66,Male,Pants,Clothing,90,Rhode Island,M,Green,Summer,3.3,Yes,Venmo,Standard,Yes,Yes,46,Debit Card,Bi-Weekly
-21,23,Male,Pants,Clothing,51,Louisiana,M,Black,Winter,2.8,Yes,Credit Card,Express,Yes,Yes,50,Cash,Every 3 Months
+21,23,Male,Pants,Clothing,51,Louisiana,M,Black,Spring,2.8,Yes,Credit Card,Express,Yes,Yes,50,Cash,Every 3 Months
 22,33,Male,Pants,Clothing,62,North Carolina,M,Charcoal,Winter,4.1,Yes,Credit Card,Store Pickup,Yes,Yes,22,Debit Card,Quarterly
 23,56,Male,Pants,Clothing,37,California,M,Peach,Summer,3.2,Yes,Cash,Store Pickup,Yes,Yes,32,Debit Card,Annually
 24,31,Male,Pants,Clothing,88,Oklahoma,XL,White,Winter,4.4,Yes,Credit Card,Express,Yes,Yes,40,Credit Card,Weekly
