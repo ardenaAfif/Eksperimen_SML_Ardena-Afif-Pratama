@@ -1,0 +1,57 @@
+name: Automated Preprocessing Workflow
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'shopping_trends_raw/**'
+      - 'preprocessing/Eksperimen_Ardena-Afif-Pratama.py'
+      - '.github/workflows/main.yml'
+      - 'requirements.txt'
+
+jobs:
+  preprocess-data:
+    runs-on: ubuntu-latest # Menjalankan job pada runner Ubuntu terbaru
+
+    steps:
+      - name: Checkout Repository
+        
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        # Mengatur versi Python yang akan digunakan
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13.3'
+
+      - name: Install Dependencies
+        # Menginstal library Python yang dibutuhkan oleh script preprocessing
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Preprocessing Script
+        run: |
+          python preprocessing/automate_Ardena-Afif-Pratama.py
+
+      - name: Commit and Push Processed Data
+        # Melakukan commit dan push file hasil preprocessing jika ada perubahan
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+
+          # Tambahkan file hasil proses ke staging area
+          git add preprocessing/shopping_trends_preprocessing/processed_shopping_trends.csv
+
+          # Cek apakah ada perubahan yang di-stage untuk di-commit
+          # `git diff --staged --quiet` akan exit dengan 0 jika tidak ada perubahan, 1 jika ada
+          if ! git diff --staged --quiet; then
+            git commit -m "Automated preprocessing: Update processed_shopping_trends.csv"
+            git push
+            echo "Perubahan pada data yang diproses telah di-commit dan di-push."
+          else
+            echo "Tidak ada perubahan pada data yang diproses untuk di-commit."
+          fi
