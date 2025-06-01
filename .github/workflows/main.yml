@@ -4,11 +4,11 @@ on:
   push:
     branches:
       - main
-    paths:
-      - 'shopping_trends_raw/**'
-      - 'preprocessing/Eksperimen_Ardena-Afif-Pratama.py'
-      - '.github/workflows/main.yml'
-      - 'requirements.txt'
+    # paths:
+    #   - 'shopping_trends_raw/**'
+    #   - 'preprocessing/Eksperimen_Ardena-Afif-Pratama.py'
+    #   - '.github/workflows/main.yml'
+    #   - 'requirements.txt'
 
 jobs:
   preprocess-data:

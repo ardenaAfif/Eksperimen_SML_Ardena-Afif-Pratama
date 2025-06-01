@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from sklearn.preprocessing import OneHotEncoder
+from sklearn.preprocessing import StandardScaler, OneHotEncoder, LabelEncoder
 from sklearn.compose import ColumnTransformer
 import os
 
@@ -25,94 +25,98 @@ def load_data(file_path):
         print(f"Error saat memuat data: {e}")
         return None
     
-def preprocess_data_for_regression(df):
+def preprocess_data_for_classification(df, target_column_name='Category'):
     """
-    Melakukan preprocessing pada DataFrame untuk tugas regresi (target: Purchase Amount (USD)).
+    Melakukan preprocessing pada DataFrame untuk tugas klasifikasi.
+    Target default adalah 'Category'.
     """
     if df is None:
         return None, None # Mengembalikan None untuk X dan y jika df None
 
-    print("Memulai preprocessing data untuk regresi...")
+    print(f"Memulai preprocessing data untuk klasifikasi (Target: {target_column_name})...")
     
-    # 1. Pisahkan target variabel y terlebih dahulu
-    if 'Purchase Amount (USD)' not in df.columns:
-        print("Error: Kolom target 'Purchase Amount (USD)' tidak ditemukan.")
+    # 1. Validasi kolom target
+    if target_column_name not in df.columns:
+        print(f"Error: Kolom target '{target_column_name}' tidak ditemukan.")
         return None, None
-    y_target = df['Purchase Amount (USD)'].copy()
-    X_features = df.drop('Purchase Amount (USD)', axis=1)
-    print(f"Target 'Purchase Amount (USD)' telah dipisahkan. Shape y: {y_target.shape}")
-    print(f"Shape X awal (sebelum drop Customer ID): {X_features.shape}")
-
-    # 2. Menghapus Kolom Tidak Relevan dari X_features
+    
+    # 2. Pisahkan target variabel y dan Label Encode
+    y_target_series = df[target_column_name].copy()
+    label_encoder = LabelEncoder()
+    y_encoded = label_encoder.fit_transform(y_target_series)
+    
+    print(f"Target '{target_column_name}' telah di-LabelEncode. Shape y_encoded: {y_encoded.shape}")
+    
+    # 3. Siapkan fitur X (hapus target asli dan ID)
+    X_features = df.drop(columns=[target_column_name])
     if 'Customer ID' in X_features.columns:
         X_features = X_features.drop('Customer ID', axis=1)
         print("Kolom 'Customer ID' telah dihapus dari fitur X.")
     else:
         print("Kolom 'Customer ID' tidak ditemukan di fitur X, tidak ada yang dihapus.")
-    
-    # 3. Daftar Fitur Kategorikal (sesuai contoh Anda)
-    user_categorical_features = [
-        'Gender', 'Item Purchased', 'Category', 'Location', 'Size', 'Color', 
-        'Season', 'Subscription Status', 'Payment Method', 'Shipping Type', 
-        'Discount Applied', 'Promo Code Used', 'Preferred Payment Method', 
-        'Frequency of Purchases'
-    ]
-    
-    # Filter daftar ini untuk memastikan hanya kolom yang ada di X_features yang digunakan
-    valid_categorical_features = [col for col in user_categorical_features if col in X_features.columns]
-    print(f"Fitur Kategorikal yang valid untuk di-encode ({len(valid_categorical_features)}): {valid_categorical_features}")
+    print(f"Shape X_features (setelah drop target & ID): {X_features.shape}")
 
-    # Fitur yang tidak ada di valid_categorical_features akan menjadi 'passthrough'
+    # 4. Identifikasi Fitur Numerik dan Kategorikal dari X_features
+    numerical_features = X_features.select_dtypes(include=np.number).columns.tolist()
+    categorical_features_for_ohe = X_features.select_dtypes(include='object').columns.tolist()
     
-    # 4. Membuat Preprocessor (OneHotEncoder untuk kategorikal, sisanya passthrough)
+    print(f"Fitur Numerik yang akan di-scale ({len(numerical_features)}): {numerical_features}")
+    print(f"Fitur Kategorikal yang akan di-OHE ({len(categorical_features_for_ohe)}): {categorical_features_for_ohe}")
+
+    # 5. Membuat Preprocessor
+    # StandardScaler untuk numerik, OneHotEncoder untuk kategorikal (yang tersisa di X_features)
     preprocessor = ColumnTransformer(
         transformers=[
-            ('one_hot', OneHotEncoder(handle_unknown='ignore', sparse_output=False), valid_categorical_features)
+            ('num', StandardScaler(), numerical_features),
+            ('cat', OneHotEncoder(handle_unknown='ignore', drop='first', sparse_output=False), categorical_features_for_ohe)
         ],
-        remainder='passthrough' # Fitur numerik dan kategorikal lain (jika ada) akan dilewatkan
+        remainder='passthrough' # Seharusnya tidak ada sisa jika semua tipe data ditangani
     )
 
-    # 5. Terapkan Preprocessing pada X_features
+    # 6. Terapkan Preprocessing pada X_features
     print(f"Menerapkan ColumnTransformer pada X_features dengan shape: {X_features.shape}")
     try:
         X_transformed_array = preprocessor.fit_transform(X_features)
         
         # Mendapatkan nama kolom setelah transformasi
-        ohe_feature_names = preprocessor.named_transformers_['one_hot'].get_feature_names_out(valid_categorical_features)
+        ohe_feature_names = []
+        if categorical_features_for_ohe: # Hanya jika ada fitur kategorikal untuk OHE
+             ohe_feature_names = preprocessor.named_transformers_['cat'].get_feature_names_out(categorical_features_for_ohe)
         
-        # Mendapatkan nama kolom yang dilewatkan (passthrough)
-        # Urutan mereka dipertahankan oleh ColumnTransformer setelah kolom yang ditransformasi.
-        passthrough_feature_names = [
-            col for col in X_features.columns if col not in valid_categorical_features
-        ]
+        final_feature_names = numerical_features + list(ohe_feature_names) 
         
-        # Nama kolom gabungan (OHE dulu, baru passthrough)
-        final_feature_names = list(ohe_feature_names) + passthrough_feature_names
-        
+        # Cek apakah jumlah nama fitur hasil transformasi sesuai dengan jumlah kolom array
+        if X_transformed_array.shape[1] != len(final_feature_names):
+            print("PERINGATAN: Jumlah nama fitur tidak cocok dengan jumlah kolom hasil transformasi!")
+            print(f"Kolom array: {X_transformed_array.shape[1]}, Nama fitur terkonstruksi: {len(final_feature_names)}")
+            
         X_transformed_df = pd.DataFrame(X_transformed_array, columns=final_feature_names, index=X_features.index)
         
         print("Preprocessing fitur X berhasil diterapkan.")
         print(f"Dimensi X_transformed_df setelah preprocessing: {X_transformed_df.shape}")
-        return X_transformed_df, y_target
+        return X_transformed_df, y_encoded # Mengembalikan X yang sudah diproses dan y yang sudah di-LabelEncode
         
     except Exception as e:
         print(f"Error saat preprocessing fitur X: {e}")
         import traceback
-        traceback.print_exc() # Cetak traceback untuk debug lebih detail
+        traceback.print_exc()
         return None, None
 
-def save_data(X_df, y_series, output_file_path):
+def save_combined_data(X_df, y_encoded_array, target_name, output_file_path):
     """
-    Menggabungkan X_df dan y_series, lalu menyimpan ke file CSV.
+    Menggabungkan X_df dan y_encoded_array (sebagai Series), lalu menyimpan ke file CSV.
     """
-    if X_df is None or y_series is None:
+    if X_df is None or y_encoded_array is None:
         print("Tidak ada data X atau y untuk disimpan karena error pada tahap sebelumnya.")
         return
 
     try:
-        # Menggabungkan fitur yang sudah diproses dengan target
-        final_df_to_save = pd.concat([X_df, y_series.rename('Purchase Amount (USD)')], axis=1)
-        print(f"Menggabungkan X_transformed dan y. Shape akhir: {final_df_to_save.shape}")
+        # Jadikan y_encoded_array sebagai Pandas Series dengan nama dan indeks yang sesuai
+        y_series = pd.Series(y_encoded_array, name=target_name, index=X_df.index)
+        
+        # Menggabungkan fitur yang sudah diproses dengan target yang sudah di-LabelEncode
+        final_df_to_save = pd.concat([X_df, y_series], axis=1)
+        print(f"Menggabungkan X_transformed dan y_encoded. Shape akhir: {final_df_to_save.shape}")
 
         # Membuat direktori output jika belum ada
         output_dir = os.path.dirname(output_file_path)
@@ -121,23 +125,26 @@ def save_data(X_df, y_series, output_file_path):
             print(f"Direktori '{output_dir}' telah dibuat di {output_dir}")
             
         final_df_to_save.to_csv(output_file_path, index=False)
-        print(f"Dataset yang sudah diproses (fitur X dan target y) berhasil disimpan di: {output_file_path}")
+        print(f"Dataset yang sudah diproses (fitur X dan target y_encoded) berhasil disimpan di: {output_file_path}")
     except Exception as e:
         print(f"Gagal menyimpan file gabungan: {e}")
 
 
-if __name__ == "__main__":
-    print('Memulai otomatisasi preprocessing data...')
 
-    # Memuat data
+if __name__ == "__main__":
+    print('--- Memulai otomatisasi preprocessing data untuk Klasifikasi ---')
+
+    # Memuat data mentah
     data_raw = load_data(RAW_DATA_INPUT_PATH)
 
-    # Preprocessing data
-    X_processed, y_target = preprocess_data_for_regression(data_raw)
+    # Preprocessing data (mengembalikan X_processed dan y_encoded)
+    # Target default adalah 'Category'
+    X_processed, y_encoded = preprocess_data_for_classification(data_raw, target_column_name='Category')
 
-    if X_processed is not None and y_target is not None:
-        save_data(X_processed, y_target, PROCESSED_DATA_OUTPUT_FILE)
+    # Menyimpan data gabungan (X_processed + y_encoded)
+    if X_processed is not None and y_encoded is not None:
+        save_combined_data(X_processed, y_encoded, 'Encoded_Category', PROCESSED_DATA_OUTPUT_FILE)
     else:
         print("Preprocessing gagal, tidak ada data untuk disimpan.")
 
-    print('--- Otomatisasi preprocessing data untuk Regresi selesai ---')
+    print('--- Otomatisasi preprocessing data untuk Klasifikasi selesai ---')
