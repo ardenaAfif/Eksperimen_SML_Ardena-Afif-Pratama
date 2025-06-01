@@ -5,7 +5,7 @@ from sklearn.compose import ColumnTransformer
 import os
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__)) # Direktori tempat script ini berada (preprocessing/)
-RAW_DATA_INPUT_PATH = os.path.join(BASE_DIR, '..', 'shopping_trends.csv')
+RAW_DATA_INPUT_PATH = os.path.join(BASE_DIR, '..', 'shopping_trends_raw', 'shopping_trends.csv')
 PROCESSED_DATA_OUTPUT_DIR = os.path.join(BASE_DIR, '..', 'preprocessing')
 PROCESSED_DATA_OUTPUT_FILE = os.path.join(PROCESSED_DATA_OUTPUT_DIR, 'processed_shopping_trends.csv')
 
