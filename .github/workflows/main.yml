@@ -44,7 +44,7 @@ jobs:
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
 
           # Tambahkan file hasil proses ke staging area
-          git add preprocessing/shopping_trends_preprocessing/processed_shopping_trends.csv
+          git add preprocessing/processed_shopping_trends.csv
 
           # Cek apakah ada perubahan yang di-stage untuk di-commit
           # `git diff --staged --quiet` akan exit dengan 0 jika tidak ada perubahan, 1 jika ada
